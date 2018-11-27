@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Type Ahead 👀</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <form class="search-form">
+    <input type="text" class="search" placeholder="City or State">
+    <ul class="suggestions">
+      <li>Filter for a city</li>
+      <li>or a state</li>
+    </ul>
+  </form>
+<script>
+
+function numberWithCommas(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+const endpoint = 'https://gist.githubusercontent.com/Miserlou/c5cd8364bf9b2420bb29/raw/2bf258763cdddd704f8ffd3ea9a3e81d25e2c6f6/cities.json';
+let cities = [];
+
+const load = (url)=>{
+    fetch(url)
+    .then(blob=>blob.json())
+    .then(json=> cities.push(...json))
+    .then(()=>{
+        console.log(findMatches('bos', cities))
+    })
+}
+load(endpoint);
+
+function findMatches(wordToMatch, cities){
+    return cities.filter((place) => {
+        const regex = new RegExp(wordToMatch, "gi")
+        const {city, state} = place 
+        return city.match(regex)||state.match(regex)    //
+    })
+}
+
+function displayMatches(){
+    const matchArray = findMatches(this.value, cities);
+    const html = matchArray.reduce((arr, city) => {
+        const cityName = city.city;
+        const population = numberWithCommas(city.population);
+        const regex = new RegExp(this.value, "gi")
+        const name = cityName.replace(regex, `<span class="hl">${this.value}</span>`);
+        arr += 
+        `
+            <li>
+                <span>${name}</span>
+                <span>${population}</span>
+            </li>
+        `
+        return arr;
+    }, '');
+    suggestions.innerHTML = html;
+    // value를 담을 무언가가 필요.
+    // input value와 cities 정보간의 매칭을 위한 작업
+    // suggetions 에 접근해서 그린다.
+}
+
+const searchInput = document.querySelector('.search');
+const suggestions = document.querySelector('.suggestions');
+
+searchInput.addEventListener("change", displayMatches);
+searchInput.addEventListener("keyup", displayMatches);
+// console.log(cities)
+// fetch(endpoint)
+//     .then((blob) => blob.json())
+//     .then((data) =>{
+//         cities = data;
+//         console.dir(cities)
+//         findMatches('s',cities)
+//     } );
+</script>
+  </body>
+</html>
